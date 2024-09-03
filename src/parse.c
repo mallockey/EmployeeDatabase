@@ -157,4 +157,25 @@ int create_db_header(int fd, struct dbheader_t **headerOut) {
     return STATUS_SUCCESS;
 }
 
+int update_employee_hours(struct employee_t *employees, struct dbheader_t *dbhdr, char *name, char *hours) {
+    int i = 0;
+    struct employee_t *found_employee = NULL;
+    for (; i < dbhdr->count; i++) {
+        if (strcmp(name, employees[i].name) == 0) {
+            found_employee = &employees[i];
+        }
+	}
+
+    if (found_employee == NULL) {
+        printf("No employee with name %s in the database\n", name);
+        return STATUS_ERROR;
+    }
+
+    found_employee->hours = atoi(hours);
+
+    printf("Updated %s hours to %s\n", employees->name, hours);
+
+    return STATUS_SUCCESS;
+}
+
 

@@ -8,7 +8,6 @@
 #include "parse.h"
 
 // TODO: Add Remove functionality by Name
-// TODO: Update hours
 
 void print_usage(char *argv[]) {
     printf("Usage: %s -n -f <database file>\n", argv[0]);
@@ -23,11 +22,13 @@ int main(int argc, char *argv[]) {
     bool newfile = false;
     char *filepath = NULL;
     char *addstring = NULL;
+    char *searchstring = NULL;
+    char *hoursstring = NULL;
     bool listemployees = false;
     struct dbheader_t *dbhdr = NULL;
     struct employee_t *employees = NULL;
 
-    while ((c = getopt(argc, argv, "nf:a:l")) != -1) {
+    while ((c = getopt(argc, argv, "nf:a:ls:h:")) != -1) {
         switch(c) {
             case 'n':
                 newfile = true;
@@ -40,6 +41,12 @@ int main(int argc, char *argv[]) {
                 break;
             case 'l':
                 listemployees = true;
+                break;
+            case 's':
+                searchstring = optarg;
+                break;
+            case 'h':
+                hoursstring = optarg;
                 break;
             case '?':
                 printf("Unknown option -%c\n", c);
@@ -90,6 +97,10 @@ int main(int argc, char *argv[]) {
 
     if (listemployees) {
         list_employees(dbhdr, employees);
+    }
+
+    if (searchstring && hoursstring) {
+        update_employee_hours(employees, dbhdr, searchstring, hoursstring);
     }
 
     output_file(dbfd, dbhdr, employees);
