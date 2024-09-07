@@ -181,7 +181,7 @@ int update_employee_hours(struct employee_t *employees, struct dbheader_t *dbhdr
 
     employees[found_index].hours = atoi(hours);
 
-    printf("Updated %s hours to %s\n", employees->name, hours);
+    printf("Updated %s hours to %s\n", employees[found_index].name, hours);
 
     return STATUS_SUCCESS;
 }
