@@ -71,12 +71,19 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
 
 	int realcount = dbhdr->count;
 
+    off_t new_filesize = sizeof(struct dbheader_t) + (dbhdr->count * sizeof(struct employee_t));
+
+    if (ftruncate(fd, new_filesize) == -1) {
+        perror("ftruncate");
+        return STATUS_ERROR;
+    }
+
+	lseek(fd, 0, SEEK_SET);
+
 	dbhdr->magic = htonl(dbhdr->magic);
 	dbhdr->filesize = htonl(sizeof(struct dbheader_t) + (sizeof(struct employee_t) * realcount));
 	dbhdr->count = htons(dbhdr->count);
 	dbhdr->version = htons(dbhdr->version);
-
-	lseek(fd, 0, SEEK_SET);
 
 	write(fd, dbhdr, sizeof(struct dbheader_t));
 
@@ -129,8 +136,9 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
     struct stat dbstat = {0};
     fstat(fd, &dbstat);
+
     if (header->filesize != dbstat.st_size) {
-        printf("Hader size not matching\n");
+        printf("Header size not matching\n");
         free(header);
         return -1;
     }
@@ -159,21 +167,56 @@ int create_db_header(int fd, struct dbheader_t **headerOut) {
 
 int update_employee_hours(struct employee_t *employees, struct dbheader_t *dbhdr, char *name, char *hours) {
     int i = 0;
-    struct employee_t *found_employee = NULL;
+    int found_index = -1;
     for (; i < dbhdr->count; i++) {
         if (strcmp(name, employees[i].name) == 0) {
-            found_employee = &employees[i];
+            found_index = i;
         }
 	}
 
-    if (found_employee == NULL) {
+    if (found_index == -1) {
         printf("No employee with name %s in the database\n", name);
         return STATUS_ERROR;
     }
 
-    found_employee->hours = atoi(hours);
+    employees[found_index].hours = atoi(hours);
 
     printf("Updated %s hours to %s\n", employees->name, hours);
+
+    return STATUS_SUCCESS;
+}
+
+int remove_employee_by_name(struct employee_t *employees, struct dbheader_t *dbhdr, char *name) {
+    int found_index = -1;
+
+    // Find the employee to remove
+    for (int i = 0; i < dbhdr->count; i++) {
+        if (strcmp(name, employees[i].name) == 0) {
+            found_index = i;
+            break;
+        }
+    }
+
+    if (found_index == -1) {
+        printf("No employee with name %s in the database\n", name);
+        return STATUS_ERROR;
+    }
+
+    // Shift all employees after the found one to the left
+    for (int i = found_index; i < dbhdr->count - 1; i++) {
+        employees[i] = employees[i + 1];
+    }
+
+    // Resize the employees array
+    struct employee_t *updated_employees = realloc(employees, (dbhdr->count - 1) * sizeof(struct employee_t));
+    if (updated_employees == NULL && dbhdr->count > 1) {
+        printf("Realloc failed\n");
+        return STATUS_ERROR;
+    }
+
+    dbhdr->count--;
+
+    employees = updated_employees;
 
     return STATUS_SUCCESS;
 }

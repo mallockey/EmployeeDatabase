@@ -7,12 +7,14 @@
 #include "file.h"
 #include "parse.h"
 
-// TODO: Add Remove functionality by Name
-
 void print_usage(char *argv[]) {
     printf("Usage: %s -n -f <database file>\n", argv[0]);
     printf("\t -n - create new database file\n");
     printf("\t -f - (required) path to database file\n");
+    printf("\t -a - add employee using comma seperated string 'Josh,41 Billy Joe Lane, 200'\n");
+    printf("\t -l - list all employees in the database'\n");
+    printf("\t -s - used in conjunction with -h to update hours\n");
+    printf("\t -r - remove employee by name\n");
     return;
 }
 
@@ -24,11 +26,12 @@ int main(int argc, char *argv[]) {
     char *addstring = NULL;
     char *searchstring = NULL;
     char *hoursstring = NULL;
+    char *removestring = NULL;
     bool listemployees = false;
     struct dbheader_t *dbhdr = NULL;
     struct employee_t *employees = NULL;
 
-    while ((c = getopt(argc, argv, "nf:a:ls:h:")) != -1) {
+    while ((c = getopt(argc, argv, "nf:a:ls:h:r:")) != -1) {
         switch(c) {
             case 'n':
                 newfile = true;
@@ -47,6 +50,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'h':
                 hoursstring = optarg;
+                break;
+            case 'r':
+                removestring = optarg;
                 break;
             case '?':
                 printf("Unknown option -%c\n", c);
@@ -101,6 +107,10 @@ int main(int argc, char *argv[]) {
 
     if (searchstring && hoursstring) {
         update_employee_hours(employees, dbhdr, searchstring, hoursstring);
+    }
+
+    if (removestring) {
+        remove_employee_by_name(employees, dbhdr, removestring);
     }
 
     output_file(dbfd, dbhdr, employees);

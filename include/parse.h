@@ -23,5 +23,6 @@ int output_file(int fd, struct dbheader_t *, struct employee_t *employees);
 void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees);
 int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring);
 int update_employee_hours(struct employee_t *employees, struct dbheader_t *dbhdr, char *name, char *hours);
+int remove_employee_by_name(struct employee_t *employees, struct dbheader_t *dbhdr, char *name);
 
 #endif
